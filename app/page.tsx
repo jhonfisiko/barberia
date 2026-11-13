@@ -37,43 +37,63 @@ export default function Home() {
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="mx-auto max-w-6xl px-5 py-20 md:py-32">
-          <p className="mb-4 text-xs uppercase tracking-[0.3em] text-muted">
-            Barbería · Estudio
-          </p>
-          <h1 className="font-display text-5xl leading-[1.05] md:text-7xl">
-            El corte que
-            <br />
-            te define.
-          </h1>
-          <p className="mt-6 max-w-md text-muted">
-            Elige tu servicio o tu barbero favorito y agenda tu cita en
-            menos de un minuto.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="#reservar"
-              className="rounded-full bg-accent px-7 py-3 text-sm font-medium text-accent-fg transition hover:opacity-90"
-            >
-              Agendar cita
-            </a>
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-line px-7 py-3 text-sm transition hover:border-fg"
-            >
-              <MessageCircle size={16} /> WhatsApp
-            </a>
-          </div>
-          <div className="mt-12 flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted">
-            <span className="flex items-center gap-2">
-              <Clock size={14} /> {BUSINESS.hours}
-            </span>
-            <span className="flex items-center gap-2">
-              <MapPin size={14} /> {BUSINESS.address}
-            </span>
+               {/* Hero con video */}
+        <section
+          className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-black bg-cover bg-center"
+          style={{ backgroundImage: "url(/videos/hero-poster.jpg)" }}
+        >
+          <video
+            className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster="/videos/hero-poster.jpg"
+          >
+            <source src="/videos/hero.mp4" type="video/mp4" />
+          </video>
+
+          {/* Capa oscura para que el texto siempre se lea */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/40" />
+
+          <div className="relative mx-auto w-full max-w-6xl px-5 py-20 text-white">
+            <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/70">
+              Barbería · Estudio
+            </p>
+            <h1 className="font-display text-5xl leading-[1.05] md:text-7xl">
+              El corte que
+              <br />
+              te define.
+            </h1>
+            <p className="mt-6 max-w-md text-white/75">
+              Elige tu servicio o tu barbero favorito y agenda tu cita en
+              menos de un minuto.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href="#reservar"
+                className="rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition hover:opacity-90"
+              >
+                Agendar cita
+              </a>
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full border border-white/40 px-7 py-3 text-sm text-white transition hover:border-white"
+              >
+                <MessageCircle size={16} /> WhatsApp
+              </a>
+            </div>
+            <div className="mt-12 flex flex-wrap gap-x-8 gap-y-2 text-sm text-white/70">
+              <span className="flex items-center gap-2">
+                <Clock size={14} /> {BUSINESS.hours}
+              </span>
+              <span className="flex items-center gap-2">
+                <MapPin size={14} /> {BUSINESS.address}
+              </span>
+            </div>
           </div>
         </section>
 
