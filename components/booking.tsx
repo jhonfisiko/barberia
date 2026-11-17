@@ -2,25 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { Check, Clock, MessageCircle } from "lucide-react";
-import {
-  BARBERS,
-  BUSINESS,
-  SERVICES,
-  TIMES,
-  formatPrice,
-} from "@/lib/data";
+import type { Barber, Service } from "@/lib/types";
+import { formatPrice } from "@/lib/format";
 import { useMounted } from "@/lib/use-mounted";
 
 type Mode = "service" | "barber";
 
 const ANY = "cualquiera";
 
-function buildDays() {
+function buildDays(closedDays: number[]) {
   const list: Date[] = [];
   const d = new Date();
-  while (list.length < 7) {
-    if (d.getDay() !== 0) list.push(new Date(d)); // sin domingos
+  let guard = 0;
+  while (list.length < 7 && guard < 30) {
+    if (!closedDays.includes(d.getDay())) list.push(new Date(d));
     d.setDate(d.getDate() + 1);
+    guard++;
   }
   return list;
 }
@@ -33,7 +30,23 @@ function dayLabel(d: Date) {
   });
 }
 
-export function Booking() {
+type Props = {
+  services: Service[];
+  barbers: Barber[];
+  times: string[];
+  closedDays: number[];
+  whatsapp: string;
+  businessName: string;
+};
+
+export function Booking({
+  services,
+  barbers,
+  times,
+  closedDays,
+  whatsapp,
+  businessName,
+}: Props) {
   const [mode, setMode] = useState<Mode>("service");
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [barberId, setBarberId] = useState<string | null>(null);
@@ -41,38 +54,42 @@ export function Booking() {
   const [time, setTime] = useState<string | null>(null);
 
   const mounted = useMounted();
-  const days = useMemo(() => (mounted ? buildDays() : []), [mounted]);
+  const days = useMemo(
+    () => (mounted ? buildDays(closedDays) : []),
+    [mounted, closedDays]
+  );
 
-  const service = SERVICES.find((s) => s.id === serviceId);
-  const barber = BARBERS.find((b) => b.id === barberId);
+  const service = services.find((s) => s.id === serviceId);
+  const barber = barbers.find((b) => b.id === barberId);
 
   const ready = Boolean(service && barberId && dayIndex !== null && time);
 
   const whatsappUrl = useMemo(() => {
-    if (!service || !barberId || dayIndex === null || !time) return "#";
+    if (!service || !barberId || dayIndex === null || !time || !whatsapp)
+      return "#";
     const who = barber ? barber.name : "cualquier barbero disponible";
     const msg =
-      `Hola, quiero agendar en ${BUSINESS.name}:\n` +
+      `Hola, quiero agendar en ${businessName}:\n` +
       `• Servicio: ${service.name} (${service.minutes} min · ${formatPrice(service.price)})\n` +
       `• Barbero: ${who}\n` +
       `• Fecha: ${dayLabel(days[dayIndex])}\n` +
       `• Hora: ${time}\n` +
       `¿Está disponible?`;
-    return `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(msg)}`;
-  }, [service, barber, barberId, dayIndex, time, days]);
+    return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
+  }, [service, barber, barberId, dayIndex, time, days, whatsapp, businessName]);
 
   const servicePicker = (
     <Step key="service" title="Servicio">
       <div className="grid gap-3 sm:grid-cols-2">
-        {SERVICES.map((s) => (
+        {services.map((s) => (
           <Option
             key={s.id}
             active={serviceId === s.id}
             onClick={() => setServiceId(s.id)}
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-2 pr-5">
               <span className="font-medium">{s.name}</span>
-              <span className="text-sm font-medium">
+              <span className="shrink-0 text-sm font-medium">
                 {formatPrice(s.price)}
               </span>
             </div>
@@ -87,8 +104,8 @@ export function Booking() {
 
   const barberPicker = (
     <Step key="barber" title="Barbero">
-      <div className="grid gap-3 sm:grid-cols-3">
-        {BARBERS.map((b) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {barbers.map((b) => (
           <Option
             key={b.id}
             active={barberId === b.id}
@@ -96,7 +113,7 @@ export function Booking() {
           >
             <span className="font-medium">{b.name}</span>
             <span className="text-xs text-muted">
-              {b.specialties.join(" · ")}
+              {(b.specialties ?? []).join(" · ")}
             </span>
           </Option>
         ))}
@@ -110,12 +127,12 @@ export function Booking() {
 
   const dateTimePicker = (
     <Step key="when" title="Fecha y hora">
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2 sm:mx-0 sm:px-0">
         {days.map((d, i) => (
           <button
             key={i}
             onClick={() => setDayIndex(i)}
-            className={`shrink-0 rounded-xl border px-4 py-2 text-sm capitalize transition ${
+            className={`shrink-0 rounded-xl border px-4 py-2.5 text-sm capitalize transition ${
               dayIndex === i
                 ? "border-accent bg-accent text-accent-fg"
                 : "border-line bg-surface hover:border-fg"
@@ -125,12 +142,12 @@ export function Booking() {
           </button>
         ))}
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {TIMES.map((t) => (
+      <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
+        {times.map((t) => (
           <button
             key={t}
             onClick={() => setTime(t)}
-            className={`rounded-xl border py-2 text-sm transition ${
+            className={`rounded-xl border py-2.5 text-sm transition ${
               time === t
                 ? "border-accent bg-accent text-accent-fg"
                 : "border-line bg-surface hover:border-fg"
@@ -145,9 +162,8 @@ export function Booking() {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-8">
-        {/* Selector de camino */}
-        <div className="inline-flex rounded-full border border-line bg-surface p-1">
+      <div className="min-w-0 space-y-8">
+        <div className="grid w-full grid-cols-2 rounded-full border border-line bg-surface p-1 sm:inline-grid sm:w-auto">
           {(
             [
               ["service", "Por servicio"],
@@ -157,7 +173,7 @@ export function Booking() {
             <button
               key={value}
               onClick={() => setMode(value)}
-              className={`rounded-full px-5 py-2 text-sm transition ${
+              className={`rounded-full px-5 py-2.5 text-sm transition ${
                 mode === value
                   ? "bg-accent text-accent-fg"
                   : "text-muted hover:text-fg"
@@ -173,7 +189,6 @@ export function Booking() {
           : [barberPicker, servicePicker, dateTimePicker]}
       </div>
 
-      {/* Resumen */}
       <aside className="h-fit rounded-2xl border border-line bg-surface p-6 lg:sticky lg:top-24">
         <h3 className="font-display text-xl">Tu cita</h3>
         <dl className="mt-4 space-y-3 text-sm">
@@ -203,7 +218,7 @@ export function Booking() {
           target="_blank"
           rel="noreferrer"
           aria-disabled={!ready}
-          className={`mt-6 flex items-center justify-center gap-2 rounded-full py-3 text-sm font-medium transition ${
+          className={`mt-6 flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-medium transition ${
             ready
               ? "bg-accent text-accent-fg hover:opacity-90"
               : "pointer-events-none bg-line text-muted"

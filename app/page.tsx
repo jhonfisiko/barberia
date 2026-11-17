@@ -1,22 +1,48 @@
+import { Suspense } from "react";
+import Image from "next/image";
 import { Clock, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileNav } from "@/components/mobile-nav";
 import { Booking } from "@/components/booking";
-import { BARBERS, BUSINESS, SERVICES, formatPrice } from "@/lib/data";
-
-const waLink = `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(
-  `Hola, quiero información de ${BUSINESS.name}`
-)}`;
+import { getSiteData } from "@/lib/queries";
+import { buildTimes, formatPrice } from "@/lib/format";
 
 export default function Home() {
-  const popular = SERVICES.filter((s) => s.popular);
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center text-sm text-muted">
+          Cargando…
+        </div>
+      }
+    >
+      <Site />
+    </Suspense>
+  );
+}
+
+async function Site() {
+  const { barbers, services, works, settings } = await getSiteData();
+
+  const name = settings.name ?? "Barbería";
+  const whatsapp = settings.whatsapp ?? "";
+  const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
+    `Hola, quiero información de ${name}`
+  )}`;
+  const popular = services.filter((s) => s.popular);
+  const times = buildTimes(
+    settings.open_time.slice(0, 5),
+    settings.close_time.slice(0, 5),
+    settings.slot_minutes
+  );
 
   return (
     <>
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <a href="#" className="font-display text-lg tracking-tight">
-            Wearco <span className="text-muted">Barber Studio</span>
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5">
+          <a href="#" className="truncate font-display text-lg tracking-tight">
+            {name}
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <a href="#populares" className="hover:text-fg">Lo más pedido</a>
@@ -24,24 +50,22 @@ export default function Home() {
             <a href="#barberos" className="hover:text-fg">Barberos</a>
             <a href="#trabajos" className="hover:text-fg">Trabajos</a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             <a
               href="#reservar"
-              className="hidden rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 sm:block"
+              className="hidden rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 md:block"
             >
               Reservar
             </a>
             <ThemeToggle />
+            <MobileNav />
           </div>
         </div>
       </header>
 
       <main>
-               {/* Hero con video */}
-        <section
-          className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-black bg-cover bg-center"
-          style={{ backgroundImage: "url(/videos/hero-poster.jpg)" }}
-        >
+        {/* Hero con video */}
+        <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-black">
           <video
             className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
             autoPlay
@@ -53,15 +77,13 @@ export default function Home() {
           >
             <source src="/videos/hero.mp4" type="video/mp4" />
           </video>
-
-          {/* Capa oscura para que el texto siempre se lea */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/40" />
 
-          <div className="relative mx-auto w-full max-w-6xl px-5 py-20 text-white">
+          <div className="relative mx-auto w-full max-w-6xl px-5 py-16 text-white">
             <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/70">
               Barbería · Estudio
             </p>
-            <h1 className="font-display text-5xl leading-[1.05] md:text-7xl">
+            <h1 className="font-display text-4xl leading-[1.05] sm:text-5xl md:text-7xl">
               El corte que
               <br />
               te define.
@@ -70,110 +92,140 @@ export default function Home() {
               Elige tu servicio o tu barbero favorito y agenda tu cita en
               menos de un minuto.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <a
                 href="#reservar"
-                className="rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                className="rounded-full bg-white px-7 py-3.5 text-center text-sm font-medium text-black transition hover:opacity-90"
               >
                 Agendar cita
               </a>
-              <a
-                href={waLink}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-full border border-white/40 px-7 py-3 text-sm text-white transition hover:border-white"
-              >
-                <MessageCircle size={16} /> WhatsApp
-              </a>
+              {whatsapp && (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm text-white transition hover:border-white"
+                >
+                  <MessageCircle size={16} /> WhatsApp
+                </a>
+              )}
             </div>
-            <div className="mt-12 flex flex-wrap gap-x-8 gap-y-2 text-sm text-white/70">
-              <span className="flex items-center gap-2">
-                <Clock size={14} /> {BUSINESS.hours}
-              </span>
-              <span className="flex items-center gap-2">
-                <MapPin size={14} /> {BUSINESS.address}
-              </span>
+            <div className="mt-10 flex flex-col gap-2 text-sm text-white/70 sm:flex-row sm:flex-wrap sm:gap-x-8">
+              {settings.hours_text && (
+                <span className="flex items-center gap-2">
+                  <Clock size={14} /> {settings.hours_text}
+                </span>
+              )}
+              {settings.address && (
+                <span className="flex items-center gap-2">
+                  <MapPin size={14} /> {settings.address}
+                </span>
+              )}
             </div>
           </div>
         </section>
 
         {/* Lo más pedido */}
-        <section id="populares" className="border-y border-line bg-surface">
-          <div className="mx-auto max-w-6xl px-5 py-20">
-            <SectionTitle eyebrow="Favoritos" title="Lo más pedido" />
-            <div className="grid gap-4 md:grid-cols-3">
-              {popular.map((s, i) => (
-                <div
-                  key={s.id}
-                  className="rounded-2xl border border-line bg-bg p-6"
-                >
-                  <div className="flex items-center justify-between text-muted">
-                    <span className="font-display text-3xl text-fg">
-                      0{i + 1}
-                    </span>
-                    <Star size={16} />
+        {popular.length > 0 && (
+          <section
+            id="populares"
+            className="scroll-mt-16 border-y border-line bg-surface"
+          >
+            <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
+              <SectionTitle eyebrow="Favoritos" title="Lo más pedido" />
+              <div className="grid gap-4 md:grid-cols-3">
+                {popular.map((s, i) => (
+                  <div
+                    key={s.id}
+                    className="rounded-2xl border border-line bg-bg p-6"
+                  >
+                    <div className="flex items-center justify-between text-muted">
+                      <span className="font-display text-3xl text-fg">
+                        0{i + 1}
+                      </span>
+                      <Star size={16} />
+                    </div>
+                    <h3 className="mt-5 text-lg font-medium">{s.name}</h3>
+                    <p className="mt-1 text-sm text-muted">{s.description}</p>
+                    <div className="mt-5 flex items-center justify-between text-sm">
+                      <span className="text-muted">{s.minutes} min</span>
+                      <span className="font-medium">
+                        {formatPrice(s.price)}
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="mt-6 text-lg font-medium">{s.name}</h3>
-                  <p className="mt-1 text-sm text-muted">{s.description}</p>
-                  <div className="mt-5 flex items-center justify-between text-sm">
-                    <span className="text-muted">{s.minutes} min</span>
-                    <span className="font-medium">{formatPrice(s.price)}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Servicios */}
-        <section id="servicios" className="mx-auto max-w-6xl px-5 py-20">
+        <section
+          id="servicios"
+          className="mx-auto max-w-6xl scroll-mt-16 px-5 py-16 md:py-20"
+        >
           <SectionTitle eyebrow="Carta" title="Servicios" />
-          <ul className="divide-y divide-line border-y border-line">
-            {SERVICES.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between gap-4 py-5"
-              >
-                <div className="flex items-start gap-4">
-                  <Scissors size={18} className="mt-1 text-muted" />
-                  <div>
-                    <p className="font-medium">{s.name}</p>
-                    <p className="text-sm text-muted">{s.description}</p>
+          {services.length === 0 ? (
+            <p className="text-sm text-muted">Próximamente.</p>
+          ) : (
+            <ul className="divide-y divide-line border-y border-line">
+              {services.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center justify-between gap-4 py-5"
+                >
+                  <div className="flex min-w-0 items-start gap-4">
+                    <Scissors size={18} className="mt-1 shrink-0 text-muted" />
+                    <div className="min-w-0">
+                      <p className="font-medium">{s.name}</p>
+                      <p className="text-sm text-muted">{s.description}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-medium">{formatPrice(s.price)}</p>
-                  <p className="text-xs text-muted">{s.minutes} min</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  <div className="shrink-0 text-right">
+                    <p className="font-medium">{formatPrice(s.price)}</p>
+                    <p className="text-xs text-muted">{s.minutes} min</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Barberos */}
         <section
           id="barberos"
-          className="border-y border-line bg-surface"
+          className="scroll-mt-16 border-y border-line bg-surface"
         >
-          <div className="mx-auto max-w-6xl px-5 py-20">
+          <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
             <SectionTitle eyebrow="El equipo" title="Nuestros barberos" />
             <div className="grid gap-6 md:grid-cols-2">
-              {BARBERS.map((b) => (
+              {barbers.map((b) => (
                 <div
                   key={b.id}
-                  className="flex gap-5 rounded-2xl border border-line bg-bg p-6"
+                  className="flex flex-col items-center gap-5 rounded-2xl border border-line bg-bg p-6 text-center sm:flex-row sm:items-start sm:text-left"
                 >
-                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-line to-muted/40 font-display text-3xl">
-                    {b.name.slice(-1)}
+                  <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-line to-muted/40 font-display text-3xl">
+                    {b.photo_url ? (
+                      <Image
+                        src={b.photo_url}
+                        alt={b.name}
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      b.name.charAt(0)
+                    )}
                   </div>
                   <div>
                     <h3 className="font-display text-2xl">{b.name}</h3>
                     <p className="text-xs uppercase tracking-widest text-muted">
-                      {b.role}
+                      {b.role_title}
                     </p>
                     <p className="mt-3 text-sm text-muted">{b.bio}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {b.specialties.map((sp) => (
+                    <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+                      {(b.specialties ?? []).map((sp) => (
                         <span
                           key={sp}
                           className="rounded-full border border-line px-3 py-1 text-xs"
@@ -190,51 +242,82 @@ export default function Home() {
         </section>
 
         {/* Trabajos */}
-        <section id="trabajos" className="mx-auto max-w-6xl px-5 py-20">
+        <section
+          id="trabajos"
+          className="mx-auto max-w-6xl scroll-mt-16 px-5 py-16 md:py-20"
+        >
           <SectionTitle eyebrow="Portafolio" title="Trabajos de cada barbero" />
           <div className="space-y-12">
-            {BARBERS.map((b) => (
-              <div key={b.id}>
-                <h3 className="mb-4 font-display text-xl">{b.name}</h3>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {b.works.map((w, i) => (
-                    <div
-                      key={w.id}
-                      className="group relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-gradient-to-br from-line to-muted/30"
-                      style={{ filter: `brightness(${1 - i * 0.04})` }}
-                    >
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm text-white">
-                        {w.title}
-                      </div>
+            {barbers.map((b) => {
+              const mine = works.filter((w) => w.barber_id === b.id);
+              return (
+                <div key={b.id}>
+                  <h3 className="mb-4 font-display text-xl">{b.name}</h3>
+                  {mine.length === 0 ? (
+                    <p className="rounded-xl border border-dashed border-line p-6 text-sm text-muted">
+                      Pronto publicaremos los trabajos de {b.name}.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                      {mine.map((w) => (
+                        <div
+                          key={w.id}
+                          className="relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-surface"
+                        >
+                          <Image
+                            src={w.image_url}
+                            alt={w.title ?? `Trabajo de ${b.name}`}
+                            fill
+                            sizes="(min-width: 768px) 25vw, 50vw"
+                            className="object-cover"
+                          />
+                          {w.title && (
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm text-white">
+                              {w.title}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <p className="mt-6 text-xs text-muted">
-            * Espacios de ejemplo: aquí irán las fotos reales de cada barbero.
-          </p>
         </section>
 
         {/* Reservar */}
         <section
           id="reservar"
-          className="border-t border-line bg-surface"
+          className="scroll-mt-16 border-t border-line bg-surface"
         >
-          <div className="mx-auto max-w-6xl px-5 py-20">
+          <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
             <SectionTitle eyebrow="Agenda" title="Reserva tu cita" />
-            <Booking />
+            <Booking
+              services={services}
+              barbers={barbers}
+              times={times}
+              closedDays={settings.closed_days}
+              whatsapp={whatsapp}
+              businessName={name}
+            />
           </div>
         </section>
       </main>
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-8 text-sm text-muted md:flex-row">
-               <span>© 2026 {BUSINESS.name}</span>
-              <a href={waLink} target="_blank" rel="noreferrer" className="hover:text-fg">
-            Escríbenos por WhatsApp
-          </a>
+          <span>© 2026 {name}</span>
+          {whatsapp && (
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-fg"
+            >
+              Escríbenos por WhatsApp
+            </a>
+          )}
         </div>
       </footer>
     </>
@@ -249,7 +332,7 @@ function SectionTitle({
   title: string;
 }) {
   return (
-    <div className="mb-10">
+    <div className="mb-8 md:mb-10">
       <p className="mb-2 text-xs uppercase tracking-[0.3em] text-muted">
         {eyebrow}
       </p>
