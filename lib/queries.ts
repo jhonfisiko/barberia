@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Barber, Service, Settings, Work } from "@/lib/types";
 
 const DEFAULT_SETTINGS: Settings = {
-  name: "Woeaco Barber Estudio",
+  name: "wearco Barber Estudio",
   whatsapp: "",
   address: "",
   hours_text: "",
