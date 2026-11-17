@@ -10,7 +10,7 @@ export const metadata = {
 const NAV = [
   { href: "/admin", label: "Resumen" },
   { href: "/admin/barberos", label: "Barberos", ready: false },
-  { href: "/admin/servicios", label: "Servicios", ready: false },
+  { href: "/admin/servicios", label: "Servicios" },
   { href: "/admin/horarios", label: "Horarios", ready: false },
   { href: "/admin/citas", label: "Citas", ready: false },
   { href: "/admin/ajustes", label: "Ajustes", ready: false },
