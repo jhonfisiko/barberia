@@ -16,7 +16,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
           <a href="#" className="font-display text-lg tracking-tight">
-            Woeaco <span className="text-muted">Barber Estudio</span>
+            Wearco <span className="text-muted">Barber Studio</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <a href="#populares" className="hover:text-fg">Lo más pedido</a>
