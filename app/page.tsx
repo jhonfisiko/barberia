@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Image from "next/image";
 import { Clock, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/mobile-nav";
@@ -206,13 +205,13 @@ async function Site() {
                   className="flex flex-col items-center gap-5 rounded-2xl border border-line bg-bg p-6 text-center sm:flex-row sm:items-start sm:text-left"
                 >
                   <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-line to-muted/40 font-display text-3xl">
-                    {b.photo_url ? (
-                      <Image
+                                 {b.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
                         src={b.photo_url}
                         alt={b.name}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover"
                       />
                     ) : (
                       b.name.charAt(0)
@@ -264,12 +263,12 @@ async function Site() {
                           key={w.id}
                           className="relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-surface"
                         >
-                          <Image
+                                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
                             src={w.image_url}
                             alt={w.title ?? `Trabajo de ${b.name}`}
-                            fill
-                            sizes="(min-width: 768px) 25vw, 50vw"
-                            className="object-cover"
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full object-cover"
                           />
                           {w.title && (
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm text-white">
