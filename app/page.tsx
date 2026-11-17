@@ -21,8 +21,8 @@ export default function Home() {
 }
 
 async function Site() {
-  const { barbers, services, works, settings } = await getSiteData();
-
+  const { barbers, services, works, barberServices, settings } =
+    await getSiteData();
   const name = settings.name ?? "Barbería";
   const whatsapp = settings.whatsapp ?? "";
   const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
@@ -292,9 +292,10 @@ async function Site() {
         >
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
             <SectionTitle eyebrow="Agenda" title="Reserva tu cita" />
-            <Booking
+                        <Booking
               services={services}
               barbers={barbers}
+              barberServices={barberServices}
               times={times}
               closedDays={settings.closed_days}
               whatsapp={whatsapp}

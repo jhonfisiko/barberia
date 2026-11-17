@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, Clock, MessageCircle } from "lucide-react";
-import type { Barber, Service } from "@/lib/types";
+import type { Barber, BarberService, Service } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { useMounted } from "@/lib/use-mounted";
 
@@ -33,6 +33,7 @@ function dayLabel(d: Date) {
 type Props = {
   services: Service[];
   barbers: Barber[];
+  barberServices: BarberService[];
   times: string[];
   closedDays: number[];
   whatsapp: string;
@@ -42,6 +43,7 @@ type Props = {
 export function Booking({
   services,
   barbers,
+  barberServices,
   times,
   closedDays,
   whatsapp,
@@ -59,69 +61,158 @@ export function Booking({
     [mounted, closedDays]
   );
 
-  const service = services.find((s) => s.id === serviceId);
-  const barber = barbers.find((b) => b.id === barberId);
+  // ---- Quién hace qué ----
+  const links = useMemo(() => {
+    const map = new Map<string, BarberService>();
+    for (const l of barberServices) map.set(`${l.barber_id}:${l.service_id}`, l);
+    return map;
+  }, [barberServices]);
 
-  const ready = Boolean(service && barberId && dayIndex !== null && time);
+  // Si todavía no hay asignaciones, se asume que todos hacen todo
+  const offers = (barber: string, service: string) =>
+    barberServices.length === 0 || links.has(`${barber}:${service}`);
 
-  const whatsappUrl = useMemo(() => {
-    if (!service || !barberId || dayIndex === null || !time || !whatsapp)
-      return "#";
+  const barbersFor = (service: string) =>
+    barbers.filter((b) => offers(b.id, service));
+
+  const details = (s: Service, barber: string | null) => {
+    const link =
+      barber && barber !== ANY ? links.get(`${barber}:${s.id}`) : undefined;
+    return {
+      minutes: link?.minutes ?? s.minutes,
+      price: link?.price ?? s.price,
+    };
+  };
+
+  // ---- Selección válida (se descarta lo que ya no es compatible) ----
+  const serviceRaw = services.find((s) => s.id === serviceId);
+  const barberKnown =
+    barberId === ANY || barbers.some((b) => b.id === barberId);
+
+  let service: Service | undefined;
+  let activeBarber: string | null = null;
+
+  if (mode === "service") {
+    service =
+      serviceRaw && barbersFor(serviceRaw.id).length > 0
+        ? serviceRaw
+        : undefined;
+    if (service && barberId && barberKnown) {
+      const ok = barberId === ANY || offers(barberId, service.id);
+      activeBarber = ok ? barberId : null;
+    }
+  } else {
+    if (barberId && barberKnown) activeBarber = barberId;
+    if (serviceRaw && activeBarber) {
+      const ok =
+        activeBarber === ANY
+          ? barbersFor(serviceRaw.id).length > 0
+          : offers(activeBarber, serviceRaw.id);
+      service = ok ? serviceRaw : undefined;
+    }
+  }
+
+  const ab = activeBarber;
+  const barber =
+    ab && ab !== ANY ? barbers.find((b) => b.id === ab) : undefined;
+  const eff = service ? details(service, ab) : null;
+
+  const ready = Boolean(service && ab && dayIndex !== null && time);
+
+  let whatsappUrl = "#";
+  if (service && ab && dayIndex !== null && time && whatsapp && eff) {
     const who = barber ? barber.name : "cualquier barbero disponible";
     const msg =
       `Hola, quiero agendar en ${businessName}:\n` +
-      `• Servicio: ${service.name} (${service.minutes} min · ${formatPrice(service.price)})\n` +
+      `• Servicio: ${service.name} (${eff.minutes} min · ${formatPrice(eff.price)})\n` +
       `• Barbero: ${who}\n` +
       `• Fecha: ${dayLabel(days[dayIndex])}\n` +
       `• Hora: ${time}\n` +
       `¿Está disponible?`;
-    return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
-  }, [service, barber, barberId, dayIndex, time, days, whatsapp, businessName]);
+    whatsappUrl = `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
+  }
+
+  // ---- Opciones visibles en cada paso ----
+  const anyoneDoes = services.filter((s) => barbersFor(s.id).length > 0);
+
+  const serviceOptions =
+    mode === "service"
+      ? anyoneDoes
+      : ab === null
+        ? []
+        : ab === ANY
+          ? anyoneDoes
+          : services.filter((s) => offers(ab, s.id));
+
+  const barberOptions =
+    mode === "barber" ? barbers : service ? barbersFor(service.id) : [];
+  const showAny = barberOptions.length > 1;
 
   const servicePicker = (
     <Step key="service" title="Servicio">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {services.map((s) => (
-          <Option
-            key={s.id}
-            active={serviceId === s.id}
-            onClick={() => setServiceId(s.id)}
-          >
-            <div className="flex items-start justify-between gap-2 pr-5">
-              <span className="font-medium">{s.name}</span>
-              <span className="shrink-0 text-sm font-medium">
-                {formatPrice(s.price)}
-              </span>
-            </div>
-            <span className="mt-1 flex items-center gap-1 text-xs text-muted">
-              <Clock size={12} /> {s.minutes} min
-            </span>
-          </Option>
-        ))}
-      </div>
+      {serviceOptions.length === 0 ? (
+        <Hint>
+          {mode === "barber" && ab === null
+            ? "Elige un barbero para ver los servicios que hace."
+            : "Por ahora no hay servicios disponibles."}
+        </Hint>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {serviceOptions.map((s) => {
+            const d = details(s, mode === "barber" ? ab : null);
+            return (
+              <Option
+                key={s.id}
+                active={service?.id === s.id}
+                onClick={() => setServiceId(s.id)}
+              >
+                <div className="flex items-start justify-between gap-2 pr-5">
+                  <span className="font-medium">{s.name}</span>
+                  <span className="shrink-0 text-sm font-medium">
+                    {formatPrice(d.price)}
+                  </span>
+                </div>
+                <span className="mt-1 flex items-center gap-1 text-xs text-muted">
+                  <Clock size={12} /> {d.minutes} min
+                </span>
+              </Option>
+            );
+          })}
+        </div>
+      )}
     </Step>
   );
 
   const barberPicker = (
     <Step key="barber" title="Barbero">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {barbers.map((b) => (
-          <Option
-            key={b.id}
-            active={barberId === b.id}
-            onClick={() => setBarberId(b.id)}
-          >
-            <span className="font-medium">{b.name}</span>
-            <span className="text-xs text-muted">
-              {(b.specialties ?? []).join(" · ")}
-            </span>
-          </Option>
-        ))}
-        <Option active={barberId === ANY} onClick={() => setBarberId(ANY)}>
-          <span className="font-medium">Cualquiera</span>
-          <span className="text-xs text-muted">El primero disponible</span>
-        </Option>
-      </div>
+      {barberOptions.length === 0 ? (
+        <Hint>
+          {mode === "service" && !service
+            ? "Elige un servicio para ver los barberos que lo hacen."
+            : "Por ahora no hay barberos disponibles."}
+        </Hint>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {barberOptions.map((b) => (
+            <Option
+              key={b.id}
+              active={ab === b.id}
+              onClick={() => setBarberId(b.id)}
+            >
+              <span className="font-medium">{b.name}</span>
+              <span className="text-xs text-muted">
+                {(b.specialties ?? []).join(" · ")}
+              </span>
+            </Option>
+          ))}
+          {showAny && (
+            <Option active={ab === ANY} onClick={() => setBarberId(ANY)}>
+              <span className="font-medium">Cualquiera</span>
+              <span className="text-xs text-muted">El primero disponible</span>
+            </Option>
+          )}
+        </div>
+      )}
     </Step>
   );
 
@@ -195,7 +286,7 @@ export function Booking({
           <Row label="Servicio" value={service?.name} />
           <Row
             label="Barbero"
-            value={barberId === ANY ? "Cualquiera disponible" : barber?.name}
+            value={ab === ANY ? "Cualquiera disponible" : barber?.name}
           />
           <Row
             label="Fecha"
@@ -205,11 +296,11 @@ export function Booking({
           <div className="space-y-3 border-t border-line pt-3">
             <Row
               label="Total"
-              value={service ? formatPrice(service.price) : undefined}
+              value={eff ? formatPrice(eff.price) : undefined}
             />
             <Row
               label="Duración"
-              value={service ? `${service.minutes} min` : undefined}
+              value={eff ? `${eff.minutes} min` : undefined}
             />
           </div>
         </dl>
@@ -245,6 +336,14 @@ function Step({
       </h3>
       {children}
     </div>
+  );
+}
+
+function Hint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+      {children}
+    </p>
   );
 }
 

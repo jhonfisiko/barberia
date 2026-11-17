@@ -2,17 +2,34 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BarberForm, type AdminBarber } from "@/components/barber-form";
 import { BarberRow } from "@/components/barber-row";
+import type {
+  AssignedService,
+  ServiceLite,
+} from "@/components/barber-services-form";
 
 export default async function BarbersPage() {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("barbers")
-    .select("id,name,role_title,bio,specialties,photo_url,active,user_id")
-    .order("sort_order");
+
+  const [barbersRes, servicesRes, linksRes] = await Promise.all([
+    supabase
+      .from("barbers")
+      .select("id,name,role_title,bio,specialties,photo_url,active,user_id")
+      .order("sort_order"),
+    supabase
+      .from("services")
+      .select("id,name,minutes,price")
+      .order("sort_order"),
+    supabase
+      .from("barber_services")
+      .select("barber_id,service_id,minutes,price"),
+  ]);
+
+  const services = (servicesRes.data ?? []) as ServiceLite[];
+  const links = (linksRes.data ?? []) as AssignedService[];
 
   const admin = createAdminClient();
   const barbers: AdminBarber[] = await Promise.all(
-    (data ?? []).map(async (b) => {
+    (barbersRes.data ?? []).map(async (b) => {
       let email: string | null = null;
       if (b.user_id) {
         const { data: u } = await admin.auth.admin.getUserById(b.user_id);
@@ -28,7 +45,8 @@ export default async function BarbersPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-muted">Equipo</p>
         <h1 className="mt-2 font-display text-3xl md:text-4xl">Barberos</h1>
         <p className="mt-2 text-sm text-muted">
-          Crea barberos, súbeles la foto y dales acceso a su propio panel.
+          Crea barberos, súbeles la foto, elige qué servicios hacen y dales
+          acceso a su propio panel.
         </p>
       </div>
 
@@ -44,7 +62,14 @@ export default async function BarbersPage() {
         {barbers.length === 0 ? (
           <p className="text-sm text-muted">Aún no hay barberos.</p>
         ) : (
-          barbers.map((b) => <BarberRow key={b.id} barber={b} />)
+          barbers.map((b) => (
+            <BarberRow
+              key={b.id}
+              barber={b}
+              services={services}
+              assigned={links.filter((l) => l.barber_id === b.id)}
+            />
+          ))
         )}
       </section>
     </div>

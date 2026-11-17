@@ -1,8 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Barber, Service, Settings, Work } from "@/lib/types";
+import type {
+  Barber,
+  BarberService,
+  Service,
+  Settings,
+  Work,
+} from "@/lib/types";
 
 const DEFAULT_SETTINGS: Settings = {
-  name: "wearco Barber Estudio",
+  name: "Woeaco Barber Estudio",
   whatsapp: "",
   address: "",
   hours_text: "",
@@ -15,7 +21,7 @@ const DEFAULT_SETTINGS: Settings = {
 export async function getSiteData() {
   const supabase = await createClient();
 
-  const [barbers, services, works, settings] = await Promise.all([
+  const [barbers, services, works, settings, links] = await Promise.all([
     supabase
       .from("barbers")
       .select("id,name,role_title,bio,specialties,photo_url")
@@ -37,9 +43,12 @@ export async function getSiteData() {
       )
       .eq("id", 1)
       .maybeSingle(),
+    supabase
+      .from("barber_services")
+      .select("barber_id,service_id,minutes,price"),
   ]);
 
-  for (const r of [barbers, services, works, settings]) {
+  for (const r of [barbers, services, works, settings, links]) {
     if (r.error) console.error("Supabase:", r.error.message);
   }
 
@@ -47,6 +56,7 @@ export async function getSiteData() {
     barbers: (barbers.data ?? []) as Barber[],
     services: (services.data ?? []) as Service[],
     works: (works.data ?? []) as Work[],
+    barberServices: (links.data ?? []) as BarberService[],
     settings: { ...DEFAULT_SETTINGS, ...(settings.data ?? {}) } as Settings,
   };
 }

@@ -72,11 +72,22 @@ export async function saveService(
       .order("sort_order", { ascending: false })
       .limit(1)
       .maybeSingle();
-    const { error } = await supabase
+
+    const { data: created, error } = await supabase
       .from("services")
-      .insert({ ...payload, sort_order: (last?.sort_order ?? 0) + 1 });
-    if (error)
-      return { error: "No se pudo crear: " + error.message, values };
+      .insert({ ...payload, sort_order: (last?.sort_order ?? 0) + 1 })
+      .select("id")
+      .single();
+    if (error || !created)
+      return { error: "No se pudo crear: " + (error?.message ?? ""), values };
+
+    // Por defecto, todos los barberos hacen el servicio nuevo
+    const { data: team } = await supabase.from("barbers").select("id");
+    if (team && team.length > 0) {
+      await supabase
+        .from("barber_services")
+        .insert(team.map((b) => ({ barber_id: b.id, service_id: created.id })));
+    }
   }
 
   refresh();

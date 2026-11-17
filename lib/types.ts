@@ -33,3 +33,9 @@ export type Settings = {
   slot_minutes: number;
   closed_days: number[];
 };
+export type BarberService = {
+  barber_id: string;
+  service_id: string;
+  minutes: number | null;
+  price: number | null;
+};

@@ -5,8 +5,21 @@ import { ChevronDown } from "lucide-react";
 import { deleteBarber, toggleBarber } from "@/app/admin/barberos/actions";
 import { BarberForm, type AdminBarber } from "@/components/barber-form";
 import { BarberAccess } from "@/components/barber-access";
+import {
+  BarberServicesForm,
+  type AssignedService,
+  type ServiceLite,
+} from "@/components/barber-services-form";
 
-export function BarberRow({ barber }: { barber: AdminBarber }) {
+export function BarberRow({
+  barber,
+  services,
+  assigned,
+}: {
+  barber: AdminBarber;
+  services: ServiceLite[];
+  assigned: AssignedService[];
+}) {
   const hidden = barber.active === false;
 
   return (
@@ -32,7 +45,7 @@ export function BarberRow({ barber }: { barber: AdminBarber }) {
             <div className="min-w-0">
               <p className="truncate font-medium">{barber.name}</p>
               <p className="truncate text-sm text-muted">
-                {barber.role_title ?? "Barbero"}
+                {barber.role_title ?? "Barbero"} · {assigned.length} servicios
               </p>
             </div>
           </div>
@@ -48,6 +61,15 @@ export function BarberRow({ barber }: { barber: AdminBarber }) {
 
         <div className="space-y-8 border-t border-line p-5">
           <BarberForm barber={barber} />
+
+          <div className="space-y-3 border-t border-line pt-6">
+            <h3 className="font-display text-lg">Servicios que hace</h3>
+            <BarberServicesForm
+              barberId={barber.id}
+              services={services}
+              assigned={assigned}
+            />
+          </div>
 
           <div className="space-y-3 border-t border-line pt-6">
             <h3 className="font-display text-lg">Acceso al panel</h3>
