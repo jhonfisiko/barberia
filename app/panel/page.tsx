@@ -15,6 +15,11 @@ export default async function PanelHome() {
       title: "Mis trabajos",
       text: "Sube fotos de tus cortes para mostrarlas en la página.",
     },
+        {
+      href: "/panel/bloqueos",
+      title: "Descansos y bloqueos",
+      text: "Bloquea almuerzos, permisos o vacaciones.",
+    },
   ];
 
   return (
