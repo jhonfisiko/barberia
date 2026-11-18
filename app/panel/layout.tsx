@@ -11,8 +11,8 @@ const NAV = [
   { href: "/panel", label: "Inicio" },
   { href: "/panel/agenda", label: "Mi agenda", ready: false },
   { href: "/panel/bloqueos", label: "Descansos", ready: false },
-  { href: "/panel/trabajos", label: "Mis trabajos", ready: false },
-  { href: "/panel/perfil", label: "Mi perfil", ready: false },
+  { href: "/panel/trabajos", label: "Mis trabajos" },
+  { href: "/panel/perfil", label: "Mi perfil" },
 ];
 
 export default function PanelLayout({
