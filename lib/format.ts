@@ -16,3 +16,10 @@ export function buildTimes(open: string, close: string, step: number) {
   }
   return out;
 }
+// "14:30" → "2:30 p. m."
+export function timeLabel12(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  const suffix = h >= 12 ? "p. m." : "a. m.";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${suffix}`;
+}

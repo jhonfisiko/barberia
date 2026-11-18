@@ -4,8 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/mobile-nav";
 import { Booking } from "@/components/booking";
 import { getSiteData } from "@/lib/queries";
-import { buildTimes, formatPrice } from "@/lib/format";
-
+import { formatPrice } from "@/lib/format";
 export default function Home() {
   return (
     <Suspense
@@ -29,11 +28,7 @@ async function Site() {
     `Hola, quiero información de ${name}`
   )}`;
   const popular = services.filter((s) => s.popular);
-  const times = buildTimes(
-    settings.open_time.slice(0, 5),
-    settings.close_time.slice(0, 5),
-    settings.slot_minutes
-  );
+
 
   return (
     <>
@@ -292,12 +287,10 @@ async function Site() {
         >
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
             <SectionTitle eyebrow="Agenda" title="Reserva tu cita" />
-                        <Booking
+                                    <Booking
               services={services}
               barbers={barbers}
               barberServices={barberServices}
-              times={times}
-              closedDays={settings.closed_days}
               whatsapp={whatsapp}
               businessName={name}
             />
