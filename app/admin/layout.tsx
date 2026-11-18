@@ -13,7 +13,7 @@ const NAV = [
   { href: "/admin/servicios", label: "Servicios" },
   { href: "/admin/horarios", label: "Horarios"},
   { href: "/admin/citas", label: "Citas", ready: false },
-  { href: "/admin/ajustes", label: "Ajustes", ready: false },
+  { href: "/admin/ajustes", label: "Ajustes" },
 ];
 
 export default function AdminLayout({
