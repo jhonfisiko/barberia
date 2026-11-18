@@ -41,7 +41,7 @@ async function Site() {
       <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5">
           <a href="#" className="truncate font-display text-lg tracking-tight">
-            wearco Barber Studio
+            Wearco Barber Studio
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <a href="#populares" className="hover:text-fg">Lo más pedido</a>

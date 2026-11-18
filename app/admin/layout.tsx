@@ -3,7 +3,7 @@ import { PanelShell } from "@/components/panel-shell";
 import { requireRole } from "@/lib/auth";
 
 export const metadata = {
-  title: "Administrador · wearco Barber Estudio",
+  title: "Administrador · wearco Barber Studio",
   robots: { index: false, follow: false },
 };
 
