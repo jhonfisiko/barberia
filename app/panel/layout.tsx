@@ -9,7 +9,7 @@ export const metadata = {
 
 const NAV = [
   { href: "/panel", label: "Inicio" },
-  { href: "/panel/agenda", label: "Mi agenda", ready: false },
+  { href: "/panel/agenda", label: "Mi agenda" },
   { href: "/panel/bloqueos", label: "Descansos" },
   { href: "/panel/trabajos", label: "Mis trabajos" },
   { href: "/panel/perfil", label: "Mi perfil" },

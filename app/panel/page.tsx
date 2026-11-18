@@ -5,6 +5,11 @@ export default async function PanelHome() {
   const { session, barber } = await getOwnBarber();
 
   const links = [
+        {
+      href: "/panel/agenda",
+      title: "Mi agenda",
+      text: "Mira tus citas del día y de la semana, y acéptalas o aplázalas.",
+    },
     {
       href: "/panel/perfil",
       title: "Mi perfil",
