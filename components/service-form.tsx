@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveService, type ServiceState } from "@/app/admin/servicios/actions";
+import { ImageUpload } from "@/components/image-upload";
 
 export type AdminService = {
   id: string;
@@ -11,6 +12,7 @@ export type AdminService = {
   price: number;
   popular: boolean | null;
   active: boolean | null;
+  image_url: string | null;
 };
 
 const initial: ServiceState = {};
@@ -25,6 +27,14 @@ export function ServiceForm({ service }: { service?: AdminService }) {
   return (
     <form action={action} className="space-y-4">
       {service && <input type="hidden" name="id" value={service.id} />}
+
+      <ImageUpload
+        key={state.stamp ?? "init"}
+        name="image_url"
+        folder="services"
+        defaultUrl={v?.image_url ?? service?.image_url ?? ""}
+        label="Foto del servicio"
+      />
 
       <Field label="Nombre">
         <input

@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
+import { connection } from "next/server";
 import { cookies } from "next/headers";
 
 export async function createClient() {
+  // Esta app siempre lee datos en vivo: se marca como dinámica antes de tocar nada
+  await connection();
   const cookieStore = await cookies();
 
   return createServerClient(

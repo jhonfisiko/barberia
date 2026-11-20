@@ -2,17 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { isOwnMediaUrl } from "@/lib/barber";
 import { createClient } from "@/lib/supabase/server";
 
 export type ServiceState = {
   error?: string;
   ok?: boolean;
+  stamp?: number;
   values?: {
     name: string;
     description: string;
     minutes: string;
     price: string;
     popular: boolean;
+    image_url: string;
   };
 };
 
@@ -36,6 +39,7 @@ export async function saveService(
     minutes: String(formData.get("minutes") ?? ""),
     price: String(formData.get("price") ?? ""),
     popular: formData.get("popular") === "on",
+    image_url: String(formData.get("image_url") ?? "").trim(),
   };
   const minutes = Number(values.minutes);
   const price = Number(values.price);
@@ -48,6 +52,8 @@ export async function saveService(
     };
   if (!Number.isInteger(price) || price < 0)
     return { error: "El precio debe ser un número entero.", values };
+  if (values.image_url && !isOwnMediaUrl(values.image_url))
+    return { error: "La imagen no es válida. Súbela de nuevo.", values };
 
   const supabase = await createClient();
   const payload = {
@@ -56,6 +62,7 @@ export async function saveService(
     minutes,
     price,
     popular: values.popular,
+    image_url: values.image_url || null,
   };
 
   if (id) {
@@ -91,7 +98,7 @@ export async function saveService(
   }
 
   refresh();
-  return { ok: true };
+  return { ok: true, stamp: Date.now() };
 }
 
 export async function toggleService(formData: FormData): Promise<void> {

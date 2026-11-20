@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { Suspense } from "react";
 import { Clock, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -5,6 +6,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { Booking } from "@/components/booking";
 import { getSiteData } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
+
 export default function Home() {
   return (
     <Suspense
@@ -22,6 +24,7 @@ export default function Home() {
 async function Site() {
   const { barbers, services, works, barberServices, settings } =
     await getSiteData();
+
   const name = settings.name ?? "Barbería";
   const whatsapp = settings.whatsapp ?? "";
   const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
@@ -29,14 +32,13 @@ async function Site() {
   )}`;
   const popular = services.filter((s) => s.popular);
 
-
   return (
     <>
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5">
           <a href="#" className="truncate font-display text-lg tracking-tight">
-            WEARCO BARBER STUDIO
+            {name}
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <a href="#populares" className="hover:text-fg">Lo más pedido</a>
@@ -47,7 +49,7 @@ async function Site() {
           <div className="flex shrink-0 items-center gap-2">
             <a
               href="#reservar"
-              className="hidden rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 md:block"
+              className="hidden rounded-full bg-accent px-5 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 sm:block"
             >
               Reservar
             </a>
@@ -58,8 +60,8 @@ async function Site() {
       </header>
 
       <main>
-        {/* Hero con video */}
-        <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden bg-black">
+        {/* Inicio con video */}
+        <section className="relative flex min-h-[64svh] items-center overflow-hidden bg-black md:min-h-[72svh]">
           <video
             className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
             autoPlay
@@ -73,7 +75,7 @@ async function Site() {
           </video>
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/40" />
 
-          <div className="relative mx-auto w-full max-w-6xl px-5 py-16 text-white">
+          <div className="relative mx-auto w-full max-w-6xl px-5 py-14 text-white">
             <p className="mb-4 text-xs uppercase tracking-[0.3em] text-white/70">
               Barbería · Estudio
             </p>
@@ -119,33 +121,59 @@ async function Site() {
           </div>
         </section>
 
+        {/* Reservar (ahora va primero) */}
+        <section
+          id="reservar"
+          className="scroll-mt-16 border-b border-line bg-surface"
+        >
+          <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+            <SectionTitle eyebrow="Agenda" title="Reserva tu cita" />
+            <Booking
+              services={services}
+              barbers={barbers}
+              barberServices={barberServices}
+              whatsapp={whatsapp}
+              businessName={name}
+            />
+          </div>
+        </section>
+
         {/* Lo más pedido */}
         {popular.length > 0 && (
-          <section
-            id="populares"
-            className="scroll-mt-16 border-y border-line bg-surface"
-          >
+          <section id="populares" className="scroll-mt-16">
             <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
               <SectionTitle eyebrow="Favoritos" title="Lo más pedido" />
               <div className="grid gap-4 md:grid-cols-3">
                 {popular.map((s, i) => (
                   <div
                     key={s.id}
-                    className="rounded-2xl border border-line bg-bg p-6"
+                    className="overflow-hidden rounded-2xl border border-line bg-surface"
                   >
-                    <div className="flex items-center justify-between text-muted">
-                      <span className="font-display text-3xl text-fg">
-                        0{i + 1}
-                      </span>
-                      <Star size={16} />
-                    </div>
-                    <h3 className="mt-5 text-lg font-medium">{s.name}</h3>
-                    <p className="mt-1 text-sm text-muted">{s.description}</p>
-                    <div className="mt-5 flex items-center justify-between text-sm">
-                      <span className="text-muted">{s.minutes} min</span>
-                      <span className="font-medium">
-                        {formatPrice(s.price)}
-                      </span>
+                    {s.image_url && (
+                      <div className="relative aspect-[4/3] bg-bg">
+                        <img
+                          src={s.image_url}
+                          alt={s.name}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <div className="flex items-center justify-between text-muted">
+                        <span className="font-display text-3xl text-fg">
+                          0{i + 1}
+                        </span>
+                        <Star size={16} />
+                      </div>
+                      <h3 className="mt-5 text-lg font-medium">{s.name}</h3>
+                      <p className="mt-1 text-sm text-muted">{s.description}</p>
+                      <div className="mt-5 flex items-center justify-between text-sm">
+                        <span className="text-muted">{s.minutes} min</span>
+                        <span className="font-medium">
+                          {formatPrice(s.price)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -157,51 +185,55 @@ async function Site() {
         {/* Servicios */}
         <section
           id="servicios"
-          className="mx-auto max-w-6xl scroll-mt-16 px-5 py-16 md:py-20"
+          className="scroll-mt-16 border-y border-line bg-surface"
         >
-          <SectionTitle eyebrow="Carta" title="Servicios" />
-          {services.length === 0 ? (
-            <p className="text-sm text-muted">Próximamente.</p>
-          ) : (
-            <ul className="divide-y divide-line border-y border-line">
-              {services.map((s) => (
-                <li
-                  key={s.id}
-                  className="flex items-center justify-between gap-4 py-5"
-                >
-                  <div className="flex min-w-0 items-start gap-4">
-                    <Scissors size={18} className="mt-1 shrink-0 text-muted" />
-                    <div className="min-w-0">
+          <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
+            <SectionTitle eyebrow="Carta" title="Servicios" />
+            {services.length === 0 ? (
+              <p className="text-sm text-muted">Próximamente.</p>
+            ) : (
+              <ul className="divide-y divide-line border-y border-line">
+                {services.map((s) => (
+                  <li key={s.id} className="flex items-center gap-4 py-5">
+                    {s.image_url ? (
+                      <img
+                        src={s.image_url}
+                        alt={s.name}
+                        loading="lazy"
+                        className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-line bg-bg text-muted">
+                        <Scissors size={20} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium">{s.name}</p>
                       <p className="text-sm text-muted">{s.description}</p>
                     </div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="font-medium">{formatPrice(s.price)}</p>
-                    <p className="text-xs text-muted">{s.minutes} min</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                    <div className="shrink-0 text-right">
+                      <p className="font-medium">{formatPrice(s.price)}</p>
+                      <p className="text-xs text-muted">{s.minutes} min</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </section>
 
         {/* Barberos */}
-        <section
-          id="barberos"
-          className="scroll-mt-16 border-y border-line bg-surface"
-        >
+        <section id="barberos" className="scroll-mt-16">
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
             <SectionTitle eyebrow="El equipo" title="Nuestros barberos" />
             <div className="grid gap-6 md:grid-cols-2">
               {barbers.map((b) => (
                 <div
                   key={b.id}
-                  className="flex flex-col items-center gap-5 rounded-2xl border border-line bg-bg p-6 text-center sm:flex-row sm:items-start sm:text-left"
+                  className="flex flex-col items-center gap-5 rounded-2xl border border-line bg-surface p-6 text-center sm:flex-row sm:items-start sm:text-left"
                 >
                   <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-line to-muted/40 font-display text-3xl">
-                                 {b.photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                    {b.photo_url ? (
                       <img
                         src={b.photo_url}
                         alt={b.name}
@@ -238,62 +270,49 @@ async function Site() {
         {/* Trabajos */}
         <section
           id="trabajos"
-          className="mx-auto max-w-6xl scroll-mt-16 px-5 py-16 md:py-20"
-        >
-          <SectionTitle eyebrow="Portafolio" title="Trabajos de cada barbero" />
-          <div className="space-y-12">
-            {barbers.map((b) => {
-              const mine = works.filter((w) => w.barber_id === b.id);
-              return (
-                <div key={b.id}>
-                  <h3 className="mb-4 font-display text-xl">{b.name}</h3>
-                  {mine.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-line p-6 text-sm text-muted">
-                      Pronto publicaremos los trabajos de {b.name}.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                      {mine.map((w) => (
-                        <div
-                          key={w.id}
-                          className="relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-surface"
-                        >
-                                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={w.image_url}
-                            alt={w.title ?? `Trabajo de ${b.name}`}
-                            loading="lazy"
-                            className="absolute inset-0 h-full w-full object-cover"
-                          />
-                          {w.title && (
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm text-white">
-                              {w.title}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Reservar */}
-        <section
-          id="reservar"
           className="scroll-mt-16 border-t border-line bg-surface"
         >
           <div className="mx-auto max-w-6xl px-5 py-16 md:py-20">
-            <SectionTitle eyebrow="Agenda" title="Reserva tu cita" />
-                                    <Booking
-              services={services}
-              barbers={barbers}
-              barberServices={barberServices}
-              whatsapp={whatsapp}
-              businessName={name}
+            <SectionTitle
+              eyebrow="Portafolio"
+              title="Trabajos de cada barbero"
             />
+            <div className="space-y-12">
+              {barbers.map((b) => {
+                const mine = works.filter((w) => w.barber_id === b.id);
+                return (
+                  <div key={b.id}>
+                    <h3 className="mb-4 font-display text-xl">{b.name}</h3>
+                    {mine.length === 0 ? (
+                      <p className="rounded-xl border border-dashed border-line p-6 text-sm text-muted">
+                        Pronto publicaremos los trabajos de {b.name}.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        {mine.map((w) => (
+                          <div
+                            key={w.id}
+                            className="relative aspect-[4/5] overflow-hidden rounded-xl border border-line bg-bg"
+                          >
+                            <img
+                              src={w.image_url}
+                              alt={w.title ?? `Trabajo de ${b.name}`}
+                              loading="lazy"
+                              className="absolute inset-0 h-full w-full object-cover"
+                            />
+                            {w.title && (
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm text-white">
+                                {w.title}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
       </main>

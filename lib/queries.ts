@@ -8,7 +8,7 @@ import type {
 } from "@/lib/types";
 
 const DEFAULT_SETTINGS: Settings = {
-  name: "Woeaco Barber Estudio",
+  name: " Barber Estudio",
   whatsapp: "",
   address: "",
   hours_text: "",
@@ -29,7 +29,7 @@ export async function getSiteData() {
       .order("sort_order"),
     supabase
       .from("services")
-      .select("id,name,description,minutes,price,popular")
+      .select("id,name,description,minutes,price,popular,image_url")
       .eq("active", true)
       .order("sort_order"),
     supabase

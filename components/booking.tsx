@@ -1,7 +1,15 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { Check, CheckCircle2, Clock, MessageCircle } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  MessageCircle,
+  Scissors,
+  Users,
+} from "lucide-react";
 import type { Barber, BarberService, Service } from "@/lib/types";
 import type { AvailabilityResult } from "@/lib/availability-types";
 import { dayLong, dayShort } from "@/lib/agenda";
@@ -228,15 +236,25 @@ function BookingFlow({
                 active={selected.some((x) => x.id === s.id)}
                 onClick={() => toggleService(s.id)}
               >
-                <div className="flex items-start justify-between gap-2 pr-5">
-                  <span className="font-medium">{s.name}</span>
-                  <span className="shrink-0 text-sm font-medium">
-                    {formatPrice(q.price)}
-                  </span>
+                                <div className="flex items-center gap-3 pr-5">
+                  <Thumb
+                    src={s.image_url}
+                    alt={s.name}
+                    size="h-14 w-14"
+                    fallback={<Scissors size={18} />}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium">{s.name}</span>
+                      <span className="shrink-0 text-sm font-medium">
+                        {formatPrice(q.price)}
+                      </span>
+                    </div>
+                    <span className="mt-1 flex items-center gap-1 text-xs text-muted">
+                      <Clock size={12} /> {q.minutes} min
+                    </span>
+                  </div>
                 </div>
-                <span className="mt-1 flex items-center gap-1 text-xs text-muted">
-                  <Clock size={12} /> {q.minutes} min
-                </span>
               </Option>
             );
           })}
@@ -256,16 +274,27 @@ function BookingFlow({
         <Hint>Elige primero los servicios para ver qué barberos los hacen.</Hint>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {barberOptions.map((b) => (
+            {barberOptions.map((b) => (
             <Option
               key={b.id}
               active={activeBarber === b.id}
               onClick={() => setPickedBarber(b.id)}
             >
-              <span className="font-medium">{b.name}</span>
-              <span className="text-xs text-muted">
-                {(b.specialties ?? []).join(" · ")}
-              </span>
+              <div className="flex items-center gap-3 pr-5">
+                <Thumb
+                  src={b.photo_url}
+                  alt={b.name}
+                  size="h-10 w-10"
+                  round
+                  fallback={b.name.charAt(0)}
+                />
+                <div className="min-w-0">
+                  <span className="block truncate font-medium">{b.name}</span>
+                  <span className="block truncate text-xs text-muted">
+                    {(b.specialties ?? []).join(" · ")}
+                  </span>
+                </div>
+              </div>
             </Option>
           ))}
           {showAny && (
@@ -273,8 +302,21 @@ function BookingFlow({
               active={activeBarber === ANY}
               onClick={() => setPickedBarber(ANY)}
             >
-              <span className="font-medium">Cualquiera</span>
-              <span className="text-xs text-muted">El primero disponible</span>
+              <div className="flex items-center gap-3 pr-5">
+                <Thumb
+                  src={null}
+                  alt=""
+                  size="h-10 w-10"
+                  round
+                  fallback={<Users size={16} />}
+                />
+                <div className="min-w-0">
+                  <span className="block truncate font-medium">Cualquiera</span>
+                  <span className="block truncate text-xs text-muted">
+                    El primero disponible
+                  </span>
+                </div>
+              </div>
             </Option>
           )}
         </div>
@@ -636,6 +678,39 @@ function Row({ label, value }: { label: string; value?: string }) {
     <div className="flex justify-between gap-4">
       <dt className="shrink-0 text-muted">{label}</dt>
       <dd className="text-right font-medium">{value ?? "—"}</dd>
+    </div>
+  );
+}
+
+function Thumb({
+  src,
+  alt,
+  size,
+  round = false,
+  fallback,
+}: {
+  src: string | null;
+  alt: string;
+  size: string;
+  round?: boolean;
+  fallback: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden border border-line bg-bg font-display text-muted ${size} ${
+        round ? "rounded-full" : "rounded-lg"
+      }`}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        fallback
+      )}
     </div>
   );
 }

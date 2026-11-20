@@ -14,6 +14,7 @@ export type Service = {
   minutes: number;
   price: number;
   popular: boolean | null;
+  image_url: string | null;
 };
 
 export type Work = {

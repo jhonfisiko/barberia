@@ -6,7 +6,7 @@ export default async function ServicesPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("services")
-    .select("id,name,description,minutes,price,popular,active")
+    .select("id,name,description,minutes,price,popular,active,image_url")
     .order("sort_order");
 
   const services = (data ?? []) as AdminService[];
