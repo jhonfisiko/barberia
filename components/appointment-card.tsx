@@ -23,6 +23,7 @@ export type CardAppt = {
   notes: string | null;
   cancelReason: string | null;
   waUrl: string | null;
+  barber?: string | null;
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -76,6 +77,7 @@ export function AppointmentCard({
 
       <div className="mt-3 space-y-1 text-sm">
         <p className="font-medium">{appt.customer}</p>
+         {appt.barber && <p className="text-muted">Barbero: {appt.barber}</p>}
         <a
           href={`tel:${appt.phone}`}
           className="text-muted underline-offset-4 hover:underline"

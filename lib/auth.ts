@@ -34,3 +34,9 @@ export async function requireRole(role: Role) {
   }
   return session;
 }
+// Cualquier persona con cuenta del panel (dueño o barbero)
+export async function requireStaff() {
+  const session = await getSessionProfile();
+  if (!session) redirect("/login");
+  return session;
+}

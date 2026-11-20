@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { Suspense } from "react";
-import { Clock, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
+import Link from "next/link";
+import { Clock, Lock, MapPin, MessageCircle, Scissors, Star } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "@/components/mobile-nav";
 import { Booking } from "@/components/booking";
@@ -317,19 +318,29 @@ async function Site() {
         </section>
       </main>
 
-      <footer className="border-t border-line">
+            <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-5 py-8 text-sm text-muted md:flex-row">
           <span>© 2026 {name}</span>
-          {whatsapp && (
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-fg"
+          <div className="flex items-center gap-5">
+            {whatsapp && (
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-fg"
+              >
+                Escríbenos por WhatsApp
+              </a>
+            )}
+            <Link
+              href="/login"
+              aria-label="Acceso del equipo"
+              title="Acceso del equipo"
+              className="-m-2 p-2 opacity-30 transition hover:opacity-100 focus-visible:opacity-100"
             >
-              Escríbenos por WhatsApp
-            </a>
-          )}
+              <Lock size={14} />
+            </Link>
+          </div>
         </div>
       </footer>
     </>

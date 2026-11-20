@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireRole } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type AgendaState = { error?: string; ok?: boolean };
@@ -12,14 +12,14 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function refresh() {
   revalidatePath("/panel/agenda");
+  revalidatePath("/admin/citas");
 }
 
 export async function acceptAppointment(formData: FormData): Promise<void> {
-  await requireRole("barber");
+  await requireStaff();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
-  // La seguridad de la base de datos garantiza que solo toque las suyas
   const supabase = await createClient();
   await supabase
     .from("appointments")
@@ -30,7 +30,7 @@ export async function acceptAppointment(formData: FormData): Promise<void> {
 }
 
 export async function completeAppointment(formData: FormData): Promise<void> {
-  await requireRole("barber");
+  await requireStaff();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
@@ -47,7 +47,7 @@ export async function cancelAppointment(
   _prev: AgendaState,
   formData: FormData
 ): Promise<AgendaState> {
-  await requireRole("barber");
+  await requireStaff();
 
   const id = String(formData.get("id") ?? "");
   const reason = String(formData.get("reason") ?? "").trim().slice(0, 200);
@@ -76,7 +76,7 @@ export async function rescheduleAppointment(
   _prev: AgendaState,
   formData: FormData
 ): Promise<AgendaState> {
-  await requireRole("barber");
+  const session = await requireStaff();
 
   const id = String(formData.get("id") ?? "");
   const date = String(formData.get("date") ?? "");
@@ -105,7 +105,7 @@ export async function rescheduleAppointment(
   if (start.getTime() <= Date.now())
     return { error: "Elige una fecha y hora futuras." };
 
-  // No puede caer en un descanso o bloqueo
+  // No puede caer en un descanso o bloqueo del barbero
   const { count } = await supabase
     .from("time_blocks")
     .select("*", { count: "exact", head: true })
@@ -113,7 +113,7 @@ export async function rescheduleAppointment(
     .lt("starts_at", end.toISOString())
     .gt("ends_at", start.toISOString());
   if ((count ?? 0) > 0)
-    return { error: "Ese horario coincide con uno de tus bloqueos." };
+    return { error: "Ese horario coincide con un bloqueo del barbero." };
 
   const { error } = await supabase
     .from("appointments")
@@ -123,10 +123,14 @@ export async function rescheduleAppointment(
   if (error) {
     // 23P01: la base de datos impide que dos citas se crucen
     if (error.code === "23P01")
-      return { error: "Ya tienes otra cita en ese horario." };
+      return { error: "Ya hay otra cita en ese horario." };
     return { error: "No se pudo aplazar: " + error.message };
   }
 
   refresh();
-  redirect(`/panel/agenda?d=${date}&v=day`);
+  redirect(
+    session.role === "owner"
+      ? `/admin/citas?d=${date}&v=day`
+      : `/panel/agenda?d=${date}&v=day`
+  );
 }

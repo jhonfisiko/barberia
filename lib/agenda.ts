@@ -113,3 +113,8 @@ export function phoneForWhatsApp(raw: string) {
   if (/^3\d{9}$/.test(digits)) return "57" + digits;
   return digits.length >= 11 && digits.length <= 15 ? digits : null;
 }
+// Hora actual en milisegundos. Va en una función aparte para no llamar a
+// Date.now() directamente dentro de una página.
+export function currentTimeMs() {
+  return Date.now();
+}
