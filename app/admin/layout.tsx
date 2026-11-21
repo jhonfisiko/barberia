@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/horarios", label: "Horarios"},
   { href: "/admin/citas", label: "Citas" },
   { href: "/admin/ajustes", label: "Ajustes" },
+    { href: "/admin/qr", label: "Código QR" },
 ];
 
 export default function AdminLayout({

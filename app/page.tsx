@@ -7,7 +7,20 @@ import { MobileNav } from "@/components/mobile-nav";
 import { Booking } from "@/components/booking";
 import { getSiteData } from "@/lib/queries";
 import { formatPrice } from "@/lib/format";
+import type { Metadata } from "next";
+import { SITE_CITY, SITE_URL } from "@/lib/site";
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+const SCHEMA_DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 export default function Home() {
   return (
     <Suspense
@@ -32,6 +45,32 @@ async function Site() {
     `Hola, quiero información de ${name}`
   )}`;
   const popular = services.filter((s) => s.popular);
+    // Datos del negocio para Google (dirección, teléfono y horario)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HairSalon",
+    name,
+    url: SITE_URL,
+    ...(settings.address
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: settings.address,
+            ...(SITE_CITY ? { addressLocality: SITE_CITY } : {}),
+            addressCountry: "CO",
+          },
+        }
+      : {}),
+    ...(whatsapp ? { telephone: `+${whatsapp}` } : {}),
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: SCHEMA_DAYS.filter((_, i) => !settings.closed_days.includes(i)),
+        opens: settings.open_time.slice(0, 5),
+        closes: settings.close_time.slice(0, 5),
+      },
+    ],
+  };
 
   return (
     <>
